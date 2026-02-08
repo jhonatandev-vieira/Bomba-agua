@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Inteligente de Bomba d'Água</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-water"></i>
+                    <h1>Controle de Bomba d'Água</h1>
+                </div>
+                <p class="subtitle">Sistema inteligente para acionamento e monitoramento da bomba</p>
+            </div>
+            <div class="header-info">
+                <div id="datetime" class="datetime-display">Carregando...</div>
+                <div class="connection-status">
+                    <i id="wifiIcon" class="fas fa-wifi"></i>
+                    <span id="connectionStatus">Conectando ao ESP32...</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="card status-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-power-off"></i> Status da Bomba</h2>
+                </div>
+                <div class="card-body">
+                    <div id="statusIcon" class="status-icon">
+                        <i class="fas fa-toggle-off"></i>
+                    </div>
+                    <div id="statusText" class="status-text">DESLIGADA</div>
+                    <div id="lastAction" class="last-action">Última ação: Aguardando comando</div>
+                    
+                    <div class="controls">
+                        <button id="btnOn" class="btn btn-on">
+                            <i class="fas fa-play"></i> LIGAR BOMBA
+                        </button>
+                        <button id="btnOff" class="btn btn-off" disabled>
+                            <i class="fas fa-stop"></i> DESLIGAR BOMBA
+                        </button>
+                        <button id="btnToggle" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> ALTERNAR
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card timer-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-clock"></i> Tempo de Funcionamento</h2>
+                </div>
+                <div class="card-body">
+                    <div class="timer-section">
+                        <div class="timer-label">TEMPO ATUAL DA SESSÃO</div>
+                        <div id="currentTimer" class="timer-display">00:00:00</div>
+                        <div id="timerInfo" class="timer-info">Bomba está desligada</div>
+                    </div>
+                    
+                    <div class="timer-section">
+                        <div class="timer-label">TOTAL DE HOJE</div>
+                        <div id="todayTotal" class="timer-display">00:00:00</div>
+                        <div class="timer-info">Atualizado em tempo real</div>
+                    </div>
+                    
+                    <div class="timer-section">
+                        <div class="timer-label">TOTAL DO MÊS</div>
+                        <div id="monthTotal" class="timer-display">00:00:00</div>
+                        <div class="timer-info">Janeiro de 2023</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card stats-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-bar"></i> Estatísticas</h2>
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="dailyAvg">00:00</div>
+                            <div class="stat-label">Média diária</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="monthlyTotal">00:00</div>
+                            <div class="stat-label">Total mensal</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="weeklyUsage">00:00</div>
+                            <div class="stat-label">Uso semanal</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="sessionsCount">0</div>
+                            <div class="stat-label">Sessões hoje</div>
+                        </div>
+                    </div>
+                    <div class="stats-chart">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card history-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-history"></i> Histórico de Operação</h2>
+                    <div class="header-actions">
+                        <button id="refreshHistory" class="btn-small btn-primary">
+                            <i class="fas fa-sync-alt"></i> Atualizar
+                        </button>
+                        <button id="clearHistory" class="btn-small btn-gray">
+                            <i class="fas fa-trash-alt"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="historyTableContainer">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>DATA/HORA</th>
+                                    <th>AÇÃO</th>
+                                    <th>DURAÇÃO</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <!-- Histórico será preenchido pelo JavaScript -->
+                            </tbody>
+                        </table>
+                        <div id="emptyHistoryMessage" class="empty-history">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                            <p>Nenhuma operação registrada ainda.</p>
+                            <p>Ligue a bomba para começar o monitoramento.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>Sistema de Controle de Bomba d'Água &copy; 2023</p>
+                    <p>Conectado ao ESP32 | Versão 1.5</p>
+                </div>
+                <div class="system-status">
+                    <div id="systemIndicator" class="status-indicator offline"></div>
+                    <span id="systemStatusText">Desconectado</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal para confirmação -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirmar Ação</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Deseja realmente ligar a bomba d'água?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmAction" class="btn btn-primary">Confirmar</button>
+                <button id="cancelAction" class="btn btn-gray">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de configuração -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Configuração do ESP32</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="esp32Ip">IP do ESP32:</label>
+                    <input type="text" id="esp32Ip" value="192.168.10.1" placeholder="Digite o IP do ESP32">
+                </div>
+                <div class="form-group">
+                    <label for="apiPort">Porta da API:</label>
+                    <input type="text" id="apiPort" value="80" placeholder="Porta">
+                </div>
+                <div class="form-group">
+                    <button id="testConnection" class="btn btn-primary">
+                        <i class="fas fa-plug"></i> Testar Conexão
+                    </button>
+                    <span id="testResult" class="test-result"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveConfig" class="btn btn-primary">Salvar</button>
+                <button id="cancelConfig" class="btn btn-gray">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
